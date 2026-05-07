@@ -1,0 +1,554 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-sans);}
+:root{
+  --bg:#0a0f1e;--bg2:#111827;--bg3:#1a2236;--card:rgba(17,24,39,0.9);
+  --border:rgba(99,153,255,0.15);--border2:rgba(99,153,255,0.3);
+  --text:#e2e8f5;--muted:#6b7ea8;
+  --blue:#4f8bff;--teal:#00c9a7;--purple:#a78bfa;--orange:#fb923c;--green:#34d399;--red:#f87171;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;}
+.grid-bg{
+  position:fixed;inset:0;
+  background-image:linear-gradient(rgba(79,139,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(79,139,255,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+.wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:16px 16px 60px;}
+
+/* Top bar */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:rgba(10,15,30,0.8);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;margin:-16px -16px 0;margin-bottom:28px;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.clock{font-family:var(--font-mono);font-size:12px;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:999px;}
+.sync-badge{font-size:11px;font-weight:500;padding:4px 10px;border-radius:999px;border:1px solid;transition:all 0.3s;}
+.sync-badge.saved{color:var(--green);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.08);}
+.sync-badge.saving{color:var(--orange);border-color:rgba(251,146,60,0.3);background:rgba(251,146,60,0.08);}
+.sync-badge.error{color:var(--red);border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.08);}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(12px);transition:border-color 0.3s,transform 0.3s;}
+.card:hover{border-color:var(--border2);}
+.card-lift:hover{transform:translateY(-3px);}
+
+/* Hero */
+.hero{text-align:center;padding:24px 0 32px;}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid var(--border);background:rgba(79,139,255,0.06);font-size:11px;font-weight:600;color:var(--blue);margin-bottom:20px;letter-spacing:0.08em;text-transform:uppercase;}
+.hero h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:800;line-height:1.1;margin-bottom:12px;background:linear-gradient(135deg,var(--blue),var(--purple),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero p{font-size:14px;color:var(--muted);margin-bottom:28px;}
+
+/* Overall card */
+.overall{padding:22px 26px;max-width:420px;margin:0 auto;}
+.overall-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.overall-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
+.overall-pct{font-size:2.8rem;font-weight:800;color:var(--blue);}
+.circ{transform:rotate(-90deg);}
+.ptrack{height:6px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin-bottom:10px;}
+.pfill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--teal));transition:width 1.4s cubic-bezier(0.4,0,0.2,1);}
+.overall-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+
+/* Exam pill */
+.exam-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:999px;border:1px solid rgba(251,146,60,0.25);background:rgba(251,146,60,0.07);cursor:pointer;margin-top:14px;transition:background 0.2s;}
+.exam-pill:hover{background:rgba(251,146,60,0.12);}
+.exam-pill span{font-size:13px;font-weight:600;color:var(--orange);}
+
+/* Section header */
+.sec-hdr{text-align:center;margin-bottom:24px;}
+.sec-sub{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
+.sec-hdr h2{font-size:1.4rem;font-weight:700;}
+
+/* Grid */
+.subjects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+
+/* Subject card */
+.subj-card{padding:20px;cursor:pointer;}
+.subj-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.subj-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.subj-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.subj-info{flex:1;min-width:0;margin-left:10px;}
+.subj-name{font-weight:700;font-size:14px;}
+.subj-full{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;}
+.subj-circ{position:relative;width:48px;height:48px;flex-shrink:0;}
+.subj-circ span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+.mini-stats{display:flex;gap:6px;margin-bottom:12px;}
+.mini-s{flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;}
+.mini-s .num{font-size:1.2rem;font-weight:800;}
+.mini-s .lbl{font-size:9px;color:var(--muted);margin-top:2px;}
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:600;}
+.edit-btn{margin-top:12px;width:100%;padding:8px;border-radius:9px;background:rgba(79,139,255,0.06);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.edit-btn:hover{background:rgba(79,139,255,0.12);color:var(--blue);border-color:var(--border2);}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{padding:20px;text-align:center;}
+.stat-num{font-size:2rem;font-weight:800;}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:500;}
+.badges-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:999px;font-size:12px;font-weight:500;cursor:default;transition:all 0.25s;}
+.badge:hover{transform:scale(1.06);border-color:var(--blue);background:rgba(79,139,255,0.07);}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:600px){.charts-grid{grid-template-columns:1fr;}}
+.chart-card{padding:22px;}
+.chart-lbl{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:16px;}
+.bar-row{margin-bottom:10px;}
+.bar-row-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;}
+.weekly-bars{display:flex;align-items:flex-end;height:130px;gap:6px;}
+.wbar{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+.wbar-fill{width:100%;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--blue),rgba(79,139,255,0.3));transition:height 1s cubic-bezier(0.4,0,0.2,1);}
+.wbar-lbl{font-size:10px;color:var(--muted);}
+
+/* Timer */
+.timer-card{padding:28px;text-align:center;max-width:360px;margin:0 auto;}
+.timer-display{font-family:var(--font-mono);font-size:2.6rem;font-weight:700;color:var(--teal);letter-spacing:0.05em;margin:12px 0 4px;}
+.timer-status{font-size:11px;color:var(--muted);margin-bottom:20px;}
+.timer-btns{display:flex;justify-content:center;gap:8px;}
+.tbtn{padding:9px 18px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;border:none;}
+.tbtn-start{background:linear-gradient(135deg,var(--blue),#3a6fd8);color:#fff;}
+.tbtn-start:hover{filter:brightness(1.1);}
+.tbtn-stop{background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.25);color:var(--red);}
+.tbtn-stop:hover{background:rgba(248,113,113,0.2);}
+.tbtn-reset{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--muted);}
+.tbtn-reset:hover{background:rgba(255,255,255,0.1);}
+
+/* Parent msg */
+.msg-card{padding:32px;text-align:center;background:linear-gradient(135deg,rgba(79,139,255,0.04),rgba(0,201,167,0.04));border-color:rgba(79,139,255,0.18);}
+.msg-card p{font-size:14px;line-height:1.8;color:var(--text);opacity:0.85;max-width:520px;margin:0 auto;}
+
+/* Footer */
+footer{text-align:center;padding-top:20px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);}
+
+/* Divider */
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:40px auto;}
+
+/* Modal overlay */
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);z-index:100;align-items:center;justify-content:center;padding:16px;}
+.modal-wrap.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:26px;max-width:360px;width:100%;}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:18px;}
+.modal-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+.modal-name{font-size:14px;font-weight:600;margin-bottom:16px;}
+.modal-info{font-size:11px;color:var(--muted);margin-top:6px;}
+.ch-row{display:flex;align-items:center;gap:10px;}
+.ch-btn{width:38px;height:38px;border-radius:9px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+.ch-btn:hover{background:rgba(255,255,255,0.12);}
+.ch-input{width:64px;height:38px;text-align:center;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:16px;font-weight:700;outline:none;}
+.ch-input:focus{border-color:var(--blue);}
+.modal-btns{display:flex;gap:8px;margin-top:22px;}
+.mbtn{flex:1;padding:10px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;}
+.mbtn-cancel{background:rgba(255,255,255,0.06);color:var(--muted);}
+.mbtn-cancel:hover{background:rgba(255,255,255,0.1);}
+.mbtn-save{background:linear-gradient(135deg,var(--blue),#3a6fd8);color:#fff;}
+.mbtn-save:hover{filter:brightness(1.1);}
+.mbtn-orange{background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.25);color:var(--orange);}
+.mbtn-orange:hover{background:rgba(251,146,60,0.2);}
+.date-input{width:100%;height:38px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:0 12px;font-size:13px;outline:none;}
+.date-input:focus{border-color:var(--blue);}
+.days-preview{padding:10px 14px;border-radius:9px;background:rgba(251,146,60,0.07);border:1px solid rgba(251,146,60,0.2);font-size:12px;margin-top:10px;}
+.days-preview span{font-weight:700;color:var(--orange);}
+
+/* Loading overlay */
+.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.5s;}
+.loading-overlay.done{opacity:0;pointer-events:none;}
+.loading-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:13px;color:var(--muted);}
+
+/* Confetti */
+@keyframes cf{0%{transform:translateY(-10px) rotate(0);opacity:1;}100%{transform:translateY(600px) rotate(720deg);opacity:0;}}
+.cp{position:fixed;width:8px;height:8px;border-radius:2px;animation:cf 3s ease-in forwards;pointer-events:none;z-index:9999;}
+</style>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">Connecting to database...</div>
+</div>
+
+<div class="grid-bg"></div>
+
+<div class="wrap">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="live-dot"></div>
+      <span style="font-size:12px;color:var(--muted);font-weight:500;">Academic Year 2025–26</span>
+    </div>
+    <div class="topbar-right">
+      <div id="sync-badge" class="sync-badge saved">✓ Live</div>
+      <div id="clock" class="clock">00:00:00</div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-tag">✦ Study Dashboard · Shared Live</div>
+    <h1>My Study Progress Tracker</h1>
+    <p>Any changes you make are instantly visible to everyone viewing this link.</p>
+    <div class="card overall" id="overall-card">
+      <div class="overall-top">
+        <div>
+          <div class="overall-label">Overall Completion</div>
+          <div id="overall-pct" class="overall-pct">0%</div>
+        </div>
+        <div style="position:relative;width:68px;height:68px;">
+          <svg class="circ" viewBox="0 0 36 36" width="68" height="68">
+            <path d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0-31.831" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+            <path id="overall-circ" d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0-31.831" fill="none" stroke="url(#og)" stroke-width="3" stroke-dasharray="0,100" stroke-linecap="round" style="transition:stroke-dasharray 1.5s cubic-bezier(0.4,0,0.2,1);"/>
+            <defs><linearGradient id="og"><stop offset="0%" stop-color="#4f8bff"/><stop offset="100%" stop-color="#00c9a7"/></linearGradient></defs>
+          </svg>
+        </div>
+      </div>
+      <div class="ptrack"><div id="overall-bar" class="pfill" style="width:0%"></div></div>
+      <div class="overall-meta">
+        <span id="overall-frac">0 / 0 chapters</span>
+        <span id="overall-rem">— remaining</span>
+      </div>
+    </div>
+    <div class="exam-pill" onclick="openExamModal()">
+      📅 <span><span id="days-left">—</span> days until exam</span>
+      ✏️
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Subjects -->
+  <section>
+    <div class="sec-hdr">
+      <div class="sec-sub">Chapter Completion</div>
+      <h2>📚 Subject Progress</h2>
+    </div>
+    <div class="subjects-grid" id="subjects-grid"></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Stats -->
+  <section>
+    <div class="sec-hdr">
+      <div class="sec-sub">Performance</div>
+      <h2>🏆 Achievements & Stats</h2>
+    </div>
+    <div class="stats-grid">
+      <div class="card stat-card card-lift"><div class="stat-num" style="color:var(--teal);">12</div><div class="stat-lbl">Day Streak 🔥</div></div>
+      <div class="card stat-card card-lift"><div class="stat-num" style="color:var(--purple);">48h</div><div class="stat-lbl">Study Hours ⏱️</div></div>
+      <div class="card stat-card card-lift"><div class="stat-num" style="color:var(--blue);">5/7</div><div class="stat-lbl">Daily Goals ✅</div></div>
+      <div class="card stat-card card-lift"><div class="stat-num" style="color:var(--green);">87%</div><div class="stat-lbl">Attendance 🎓</div></div>
+    </div>
+    <div class="badges-row">
+      <div class="badge">👑 Consistency King</div>
+      <div class="badge">⚡ Fast Learner</div>
+      <div class="badge">🌟 Top Performer</div>
+      <div class="badge">📖 Chapter Master</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Charts -->
+  <section>
+    <div class="sec-hdr">
+      <div class="sec-sub">Insights</div>
+      <h2>📊 Analytics</h2>
+    </div>
+    <div class="charts-grid">
+      <div class="card chart-card">
+        <div class="chart-lbl">Subject Completion</div>
+        <div id="bar-chart"></div>
+      </div>
+      <div class="card chart-card">
+        <div class="chart-lbl">Weekly Study Hours</div>
+        <div class="weekly-bars" id="weekly-chart"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Timer -->
+  <section>
+    <div class="sec-hdr">
+      <div class="sec-sub">Focus Mode</div>
+      <h2>⏱️ Study Timer</h2>
+    </div>
+    <div class="card timer-card">
+      <div class="timer-display" id="timer-display">00:00:00</div>
+      <div class="timer-status" id="timer-status">Ready to focus</div>
+      <div class="timer-btns">
+        <button class="tbtn tbtn-start" onclick="startTimer()">▶ Start</button>
+        <button class="tbtn tbtn-stop" onclick="stopTimer()">⏸ Pause</button>
+        <button class="tbtn tbtn-reset" onclick="resetTimer()">↺ Reset</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Parent message -->
+  <section>
+    <div class="card msg-card">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">For Family</div>
+      <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:16px;">💌 Message for Parents</h2>
+      <p>Dear Mom &amp; Dad, I am consistently working on my studies, maintaining discipline, and tracking my progress daily. I am committed to improving every day and making you proud. Thank you for your support!</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <footer>
+    <p style="font-style:italic;margin-bottom:6px;">"The secret of getting ahead is getting started." — Mark Twain</p>
+    <p>Made with dedication ❤️ · <span style="color:var(--green);font-weight:600;">Live data · Updates visible to all viewers</span></p>
+  </footer>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-wrap" id="edit-modal" onclick="backdropClick(event,'edit-modal')">
+  <div class="modal">
+    <h3>✏️ Edit Progress</h3>
+    <div class="modal-label">Subject</div>
+    <div class="modal-name" id="modal-subj-name"></div>
+    <div class="modal-label">Chapters Completed</div>
+    <div class="ch-row">
+      <button class="ch-btn" onclick="decCh()">−</button>
+      <input class="ch-input" type="number" id="ch-input" min="0">
+      <button class="ch-btn" onclick="incCh()">+</button>
+    </div>
+    <div class="modal-info" id="ch-info"></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="mbtn mbtn-save" onclick="saveChapters()">Save & Sync</button>
+    </div>
+  </div>
+</div>
+
+<!-- Exam Modal -->
+<div class="modal-wrap" id="exam-modal" onclick="backdropClick(event,'exam-modal')">
+  <div class="modal">
+    <h3>📅 Set Exam Date</h3>
+    <div class="modal-label">Exam Date</div>
+    <input class="date-input" type="date" id="exam-date-input" oninput="previewDays()">
+    <div class="days-preview">Days remaining: <span id="days-preview">—</span></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeExamModal()">Cancel</button>
+      <button class="mbtn mbtn-orange" onclick="saveExamDate()">Save & Sync</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'study_tracker_v1';
+
+const DEFAULT = {
+  subjects: [
+    {name:"AIDS", full:"Artificial Intelligence & Data Science", icon:"brain", total:6, completed:6, updated:"2024-12-15"},
+    {name:"CN",   full:"Computer Networks",                      icon:"network", total:6, completed:5, updated:"2024-12-14"},
+    {name:"ES",   full:"Embedded Systems",                       icon:"cpu",    total:2, completed:2, updated:"2024-12-13"},
+    {name:"P&S",  full:"Probability & Statistics",               icon:"chart",  total:4, completed:3, updated:"2024-12-15"},
+    {name:"IT Law",full:"IT and Cyber Law",                       icon:"shield", total:4, completed:4, updated:"2024-12-12"},
+    {name:"ED",   full:"Entrepreneurship Development",           icon:"trend",  total:4, completed:3, updated:"2024-12-14"},
+    {name:"EVS",  full:"Environmental Science",                   icon:"leaf",   total:2, completed:2, updated:"2024-12-11"}
+  ],
+  examDate: new Date(Date.now() + 45*864e5).toISOString().split('T')[0]
+};
+
+let state = {subjects: JSON.parse(JSON.stringify(DEFAULT.subjects)), examDate: DEFAULT.examDate};
+let saveTimeout = null;
+
+function setSyncBadge(s){
+  const b = document.getElementById('sync-badge');
+  b.className = 'sync-badge ' + s;
+  b.textContent = s === 'saved' ? '✓ Live' : s === 'saving' ? '↑ Saving...' : '✗ Offline';
+}
+
+async function loadFromDB(){
+  const el = document.getElementById('loading-text');
+  try {
+    el.textContent = 'Loading your progress...';
+    const res = await window.storage.get(STORAGE_KEY, true);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      state.subjects = parsed.subjects || state.subjects;
+      state.examDate = parsed.examDate || state.examDate;
+    }
+    setSyncBadge('saved');
+  } catch(e) {
+    setSyncBadge('saved');
+  }
+  document.getElementById('loading-overlay').classList.add('done');
+  render();
+}
+
+async function saveToDB(){
+  setSyncBadge('saving');
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+    setSyncBadge('saved');
+  } catch(e){
+    setSyncBadge('error');
+  }
+}
+
+function scheduleSave(){
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveToDB, 400);
+}
+
+function daysLeft(){
+  const t = new Date(); t.setHours(0,0,0,0);
+  const e = new Date(state.examDate + 'T00:00:00'); e.setHours(0,0,0,0);
+  return Math.max(0, Math.ceil((e - t)/864e5));
+}
+
+function getStatus(pct){
+  if(pct >= 80) return {label:'Excellent', bg:'rgba(52,211,153,0.1)', border:'rgba(52,211,153,0.28)', color:'#34d399'};
+  if(pct >= 50) return {label:'Good',      bg:'rgba(251,191,36,0.1)', border:'rgba(251,191,36,0.28)', color:'#fbbf24'};
+  return {label:'Average', bg:'rgba(251,146,60,0.1)', border:'rgba(251,146,60,0.28)', color:'#fb923c'};
+}
+
+const ICONS = {
+  brain: '<circle cx="12" cy="12" r="4"/><path d="M12 2a6 6 0 0 1 6 6c0 1.5-.5 2.9-1.3 4"/><path d="M12 2a6 6 0 0 0-6 6c0 1.5.5 2.9 1.3 4"/><path d="M4.9 17A8 8 0 0 0 12 20a8 8 0 0 0 7.1-3"/>',
+  network: '<rect x="2" y="9" width="4" height="4" rx="1"/><rect x="10" y="2" width="4" height="4" rx="1"/><rect x="10" y="16" width="4" height="4" rx="1"/><rect x="18" y="9" width="4" height="4" rx="1"/><path d="M6 11h4M14 11h4M12 6v10"/>',
+  cpu: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/>',
+  chart: '<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  trend: '<path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+  leaf: '<path d="M2 22c1.25-1.25 2.5-2.5 3.5-4 .5-.5 1-1 1.5-1.5C8.5 15 10 13 10 10A8 8 0 0 1 18 2c0 8-5 12-9.5 14.5"/>',
+};
+
+function subjIcon(icon){
+  return `<svg viewBox="0 0 24 24" width="18" height="18" stroke="#fff" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[icon]||ICONS.brain}</svg>`;
+}
+
+function render(){
+  const grid = document.getElementById('subjects-grid');
+  grid.innerHTML = '';
+  let tot = 0, done = 0;
+  state.subjects.forEach((s,i) => {
+    const pct = Math.round((s.completed/s.total)*100);
+    tot += s.total; done += s.completed;
+    const st = getStatus(pct);
+    const card = document.createElement('div');
+    card.className = 'card subj-card card-lift';
+    card.innerHTML = `
+      <div class="subj-top">
+        <div class="subj-icon">${subjIcon(s.icon)}</div>
+        <div class="subj-info">
+          <div class="subj-name">${s.name}</div>
+          <div class="subj-full">${s.full}</div>
+        </div>
+        <div class="subj-circ">
+          <svg class="circ" viewBox="0 0 36 36" width="48" height="48">
+            <path d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0-31.831" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3.5"/>
+            <path d="M18 2.0845a15.9155 15.9155 0 0 1 0 31.831a15.9155 15.9155 0 0 1 0-31.831" fill="none" stroke="url(#cg${i})" stroke-width="3.5" stroke-dasharray="${pct},100" stroke-linecap="round"/>
+            <defs><linearGradient id="cg${i}"><stop offset="0%" stop-color="#4f8bff"/><stop offset="100%" stop-color="#00c9a7"/></linearGradient></defs>
+          </svg>
+          <span>${pct}%</span>
+        </div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-s"><div class="num">${s.total}</div><div class="lbl">Total</div></div>
+        <div class="mini-s"><div class="num" style="color:var(--green);">${s.completed}</div><div class="lbl">Done</div></div>
+        <div class="mini-s"><div class="num" style="color:var(--orange);">${s.total-s.completed}</div><div class="lbl">Left</div></div>
+      </div>
+      <div class="ptrack"><div class="pfill" style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+        <span class="status-pill" style="background:${st.bg};border:1px solid ${st.border};color:${st.color};">${st.label === 'Excellent' ? '✓' : st.label === 'Good' ? '◎' : '▲'} ${st.label}</span>
+        <span style="font-size:10px;color:var(--muted);">${s.updated}</span>
+      </div>
+      <button class="edit-btn">✏️ Edit Progress</button>
+    `;
+    card.querySelector('.edit-btn').addEventListener('click', () => openEditModal(i));
+    grid.appendChild(card);
+    if(pct === 100) setTimeout(()=>confetti(), 600 + i*100);
+  });
+
+  const oPct = tot ? Math.round((done/tot)*100) : 0;
+  document.getElementById('overall-pct').textContent = oPct + '%';
+  document.getElementById('overall-frac').textContent = `${done} / ${tot} chapters`;
+  document.getElementById('overall-rem').textContent = `${tot-done} remaining`;
+  document.getElementById('days-left').textContent = daysLeft();
+
+  setTimeout(()=>{
+    document.getElementById('overall-bar').style.width = oPct + '%';
+    document.getElementById('overall-circ').setAttribute('stroke-dasharray', `${oPct},100`);
+  }, 200);
+
+  renderCharts();
+}
+
+function renderCharts(){
+  const bc = document.getElementById('bar-chart');
+  bc.innerHTML = '';
+  state.subjects.forEach(s => {
+    const pct = Math.round((s.completed/s.total)*100);
+    bc.innerHTML += `<div class="bar-row"><div class="bar-row-top"><span style="font-weight:600;">${s.name}</span><span style="color:var(--muted);">${pct}%</span></div><div class="ptrack"><div class="pfill" style="width:${pct}%"></div></div></div>`;
+  });
+  const wc = document.getElementById('weekly-chart');
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], hrs=[3,4,2,5,4,6,3];
+  const mx = Math.max(...hrs);
+  wc.innerHTML = days.map((d,i)=>`<div class="wbar"><span style="font-size:10px;font-weight:600;color:var(--blue);">${hrs[i]}h</span><div class="wbar-fill" style="height:${Math.round((hrs[i]/mx)*100)}px;"></div><span class="wbar-lbl">${d}</span></div>`).join('');
+}
+
+function confetti(){
+  const cols=['#4f8bff','#00c9a7','#a78bfa','#fb923c','#34d399'];
+  for(let i=0;i<24;i++){
+    const p=document.createElement('div');
+    p.className='cp';
+    p.style.cssText=`left:${Math.random()*100}%;background:${cols[Math.floor(Math.random()*cols.length)]};animation-delay:${Math.random()*1.2}s;border-radius:${Math.random()>.5?'50%':'3px'};`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),4000);
+  }
+}
+
+let currentEdit = null;
+function openEditModal(i){
+  currentEdit = i;
+  const s = state.subjects[i];
+  document.getElementById('modal-subj-name').textContent = `${s.name} — ${s.full}`;
+  document.getElementById('ch-input').value = s.completed;
+  document.getElementById('ch-input').max = s.total;
+  document.getElementById('ch-info').textContent = `Out of ${s.total} total chapters`;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal(){ document.getElementById('edit-modal').classList.remove('open'); currentEdit=null; }
+function incCh(){ const i=document.getElementById('ch-input'); if(+i.value<+i.max) i.value=+i.value+1; }
+function decCh(){ const i=document.getElementById('ch-input'); if(+i.value>0) i.value=+i.value-1; }
+function saveChapters(){
+  if(currentEdit!==null){
+    state.subjects[currentEdit].completed = +document.getElementById('ch-input').value;
+    state.subjects[currentEdit].updated = new Date().toISOString().split('T')[0];
+    render();
+    closeEditModal();
+    scheduleSave();
+  }
+}
+
+function openExamModal(){
+  document.getElementById('exam-date-input').value = state.examDate;
+  previewDays();
+  document.getElementById('exam-modal').classList.add('open');
+}
+function closeExamModal(){ document.getElementById('exam-modal').classList.remove('open'); }
+function previewDays(){
+  const v = document.getElementById('exam-date-input').value;
+  if(v){
+    const d = new Date(v+'T00:00:00'), t = new Date(); t.setHours(0,0,0,0);
+    document.getElementById('days-preview').textContent = Math.max(0,Math.ceil((d-t)/864e5));
+  }
+}
+function saveExamDate(){
+  const v = document.getElementById('exam-date-input').value;
+  if(v){ state.examDate = v; document.getElementById('days-left').textContent = daysLeft(); closeExamModal(); scheduleSave(); }
+}
+function backdropClick(e,id){ if(e.target===document.getElementById(id)){ id==='edit-modal'?closeEditModal():closeExamModal(); }}
+
+let timerInt=null, timerSec=0;
+function startTimer(){ if(!timerInt){ timerInt=setInterval(()=>{ timerSec++; updateTimer(); },1000); document.getElementById('timer-status').textContent='● Focusing...'; document.getElementById('timer-status').style.color='var(--green)'; }}
+function stopTimer(){ clearInterval(timerInt); timerInt=null; document.getElementById('timer-status').textContent='Paused'; document.getElementById('timer-status').style.color='var(--orange)'; }
+function resetTimer(){ stopTimer(); timerSec=0; updateTimer(); document.getElementById('timer-status').textContent='Ready to focus'; document.getElementById('timer-status').style.color='var(--muted)'; }
+function updateTimer(){ const h=String(Math.floor(timerSec/3600)).padStart(2,'0'), m=String(Math.floor((timerSec%3600)/60)).padStart(2,'0'), s=String(timerSec%60).padStart(2,'0'); document.getElementById('timer-display').textContent=`${h}:${m}:${s}`; }
+setInterval(()=>{ document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}); },1000);
+
+loadFromDB();
+</script>
